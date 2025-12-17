@@ -245,3 +245,25 @@ def cat_script(script_id: int):
 
 if __name__ == "__main__":
     app()
+import requests
+
+def schedule_script(script_id: int, interval_minutes: int):
+    """
+    Agenda um script para execução periódica.
+    """
+    url = f"http://127.0.0.1:8000/scripts/{script_id}"
+    payload = {
+        "is_scheduled": True,
+        "schedule_interval": interval_minutes
+    }
+    response = requests.patch(url, json=payload)
+    
+    if response.status_code == 200:
+        print(f"Script {script_id} agendado para rodar a cada {interval_minutes} minutos.")
+    else:
+        print(f"Erro ao agendar script {script_id}: {response.status_code} - {response.text}")
+
+# Exemplo de uso
+if __name__ == "__main__":
+    # Substitua pelos valores desejados
+    schedule_script(1, 30)
