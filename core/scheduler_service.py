@@ -2,7 +2,8 @@
 from apscheduler.schedulers.background import BackgroundScheduler
 from sqlalchemy.orm import Session
 from datetime import datetime
-from . import database, models, executor
+from . import database, models
+from agent import executor
 
 # Instância global do scheduler
 scheduler = BackgroundScheduler()
