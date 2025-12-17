@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from sqlalchemy import desc
 from typing import Dict, Any, List
 from pydantic import BaseModel
 from .. import models, database, schemas
@@ -39,6 +40,12 @@ def create_script(script: schemas.ScriptCreate, db: Session = Depends(database.g
     db.commit()
     db.refresh(db_script)
     return db_script
+
+# --- Endpoint para listar Jobs ---
+
+@router.get("/jobs", response_model=List[schemas.Job])
+def list_jobs(limit: int = 50, db: Session = Depends(database.get_db)):
+    return db.query(models.Job).order_by(desc(models.Job.id)).limit(limit).all()
 
 # --- Endpoint de Execução ---
 
