@@ -41,6 +41,20 @@ def create_script(script: schemas.ScriptCreate, db: Session = Depends(database.g
     db.refresh(db_script)
     return db_script
 
+# --- Endpoint de Atualização de Script ---
+@router.patch("/scripts/{script_id}", response_model=schemas.Script)
+def update_script(script_id: int, script_update: schemas.ScriptUpdate, db: Session = Depends(database.get_db)):
+    script = db.query(models.Script).filter(models.Script.id == script_id).first()
+    if not script:
+        raise HTTPException(status_code=404, detail="Script não encontrado")
+    
+    for key, value in script_update.dict(exclude_unset=True).items():
+        setattr(script, key, value)
+    
+    db.commit()
+    db.refresh(script)
+    return script
+
 # --- Endpoint para listar Jobs ---
 
 @router.get("/jobs", response_model=List[schemas.Job])

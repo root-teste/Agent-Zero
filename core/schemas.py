@@ -80,6 +80,8 @@ class Script(ScriptBase):
 
 # --- Schemas de Atualização de Script ---
 class ScriptUpdate(BaseModel):
+    name: Optional[str] = None
+    content: Optional[str] = None
     is_scheduled: Optional[bool] = None
     schedule_interval: Optional[int] = None
 
