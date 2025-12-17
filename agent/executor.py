@@ -5,15 +5,17 @@ import os
 import tempfile
 import json
 from datetime import datetime
-from . import models, schemas
 
-def execute_script_logic(script: models.Script, args: dict = {}) -> schemas.JobCreate:
+def execute_script_logic(script_data: dict, args: dict = {}) -> dict:
     """
-    Executa o script passando argumentos via linha de comando.
+    Executa o script fornecido no dicionário script_data.
+    script_data deve conter 'content' (o código do script).
     """
     
+    script_content = script_data.get('content', '')
+    
     with tempfile.NamedTemporaryFile(mode='w+', suffix='.py', delete=False) as temp_file:
-        temp_file.write(script.content)
+        temp_file.write(script_content)
         temp_file_path = temp_file.name
 
     start_time = datetime.utcnow()
@@ -55,7 +57,6 @@ def execute_script_logic(script: models.Script, args: dict = {}) -> schemas.JobC
     finished_time = datetime.utcnow()
 
     return {
-        "script_id": script.id,
         "status": status,
         "started_at": start_time,
         "finished_at": finished_time,
