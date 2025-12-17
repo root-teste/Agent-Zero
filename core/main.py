@@ -1,7 +1,7 @@
 # core/main.py
 from fastapi import FastAPI
 from . import models, database, scheduler_service
-from .routers import scripts, tasks
+from .routers import scripts
 
 # 1. Cria as tabelas
 models.Base.metadata.create_all(bind=database.engine)
@@ -18,5 +18,6 @@ def startup_event():
         print(f"Erro ao iniciar Scheduler: {e}")
 
 # Inclui os routers
+app.include_router(tasks.router)
 app.include_router(scripts.router)
 app.include_router(tasks.router)
