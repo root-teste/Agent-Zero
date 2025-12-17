@@ -20,4 +20,3 @@ def startup_event():
 # Inclui os routers
 app.include_router(tasks.router)
 app.include_router(scripts.router)
-app.include_router(tasks.router)
