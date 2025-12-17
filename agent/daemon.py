@@ -16,9 +16,10 @@ def run_worker():
             
             if response.status_code == 200:
                 job_data = response.json()
+                print(f"DEBUG: Dados recebidos: {job_data}")
                 script_content = job_data.get('script_content')
                 run_args = job_data.get('run_args', {})
-                job_id = job_data.get('id')
+                job_id = job_data.get('job_id') or job_data.get('id')
                 
                 print(f"Executando Job {job_id}...")
                 
