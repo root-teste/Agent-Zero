@@ -78,6 +78,11 @@ class Script(ScriptBase):
     class Config:
         from_attributes = True
 
+# --- Schemas de Atualização de Script ---
+class ScriptUpdate(BaseModel):
+    is_scheduled: Optional[bool] = None
+    schedule_interval: Optional[int] = None
+
 # --- Schemas de Jobs (Execuções) ---
 class JobBase(BaseModel):
     script_id: int
