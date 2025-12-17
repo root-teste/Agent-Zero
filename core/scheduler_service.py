@@ -3,6 +3,18 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from sqlalchemy.orm import Session
 from datetime import datetime
 from . import database, models
+from datetime import datetime
+
+def check_schedules(db: Session):
+    """
+    Verifica scripts com automação ativa e cria jobs para eles.
+    """
+    scripts = db.query(models.Script).filter(models.Script.is_active_automation == True).all()
+    for script in scripts:
+        print(f"[SCHEDULER] Criando job para script automatizado: {script.name}")
+        job = models.Job(script_id=script.id, status="pending", run_args={})
+        db.add(job)
+    db.commit()
 
 # Instância global do scheduler
 scheduler = BackgroundScheduler()
@@ -74,4 +86,5 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 def start_scheduler():
     scheduler = AsyncIOScheduler()
     scheduler.add_job(lambda: print("Scheduler Ativo"), 'interval', minutes=1)
+    scheduler.add_job(lambda: check_schedules(database.SessionLocal()), 'interval', seconds=60)
     scheduler.start()

@@ -69,6 +69,8 @@ class Script(Base):
     
     # Definição de Argumentos (JSON)
     args_schema = Column(JSON, default={})
+    cron_schedule = Column(String, nullable=True)
+    is_active_automation = Column(Boolean, default=False)
     
     jobs = relationship("Job", back_populates="script")
 
