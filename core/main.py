@@ -1,6 +1,7 @@
 # core/main.py
 from fastapi import FastAPI
 from . import models, database, scheduler_service
+from core.scheduler_service import start_scheduler
 from .routers import scripts, tasks, agent
 
 # 1. Cria as tabelas
