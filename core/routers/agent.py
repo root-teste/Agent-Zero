@@ -1,5 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from pydantic import BaseModel
+from datetime import datetime
+
+class JobReport(BaseModel):
+    status: str
+    stdout: str = ""
+    stderr: str = ""
+    finished_at: datetime
 from .. import models, database, schemas
 
 router = APIRouter()
@@ -23,7 +31,7 @@ def get_pending_job(db: Session = Depends(database.get_db)):
 
 # --- Endpoint para atualizar Job ---
 @router.post("/jobs/{job_id}/report")
-def report_job_status(job_id: int, report: schemas.Job, db: Session = Depends(database.get_db)):
+def report_job_status(job_id: int, report: JobReport, db: Session = Depends(database.get_db)):
     job = db.query(models.Job).filter(models.Job.id == job_id).first()
     if not job:
         raise HTTPException(status_code=404, detail="Job não encontrado")
