@@ -69,3 +69,9 @@ def refresh_jobs():
         print(f"[SCHEDULER] Agendado: {task.name} a cada {task.interval_minutes} min.")
     
     db.close()
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+
+def start_scheduler():
+    scheduler = AsyncIOScheduler()
+    scheduler.add_job(lambda: print("Scheduler Ativo"), 'interval', minutes=1)
+    scheduler.start()

@@ -16,6 +16,7 @@ def startup_event():
     try:
         scheduler_service.start()
         scheduler_service.refresh_jobs()
+        start_scheduler()
     except Exception as e:
         print(f"Erro ao iniciar Scheduler: {e}")
 
