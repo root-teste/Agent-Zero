@@ -5,7 +5,7 @@ from .. import models, database, schemas
 router = APIRouter()
 
 # --- Endpoint para buscar Job pendente ---
-@router.get("/jobs/pending", response_model=schemas.Job)
+@router.get("/jobs/pending")
 def get_pending_job(db: Session = Depends(database.get_db)):
     job = db.query(models.Job).filter(models.Job.status == "pending").order_by(models.Job.id).first()
     if not job:
@@ -15,10 +15,11 @@ def get_pending_job(db: Session = Depends(database.get_db)):
     if not script:
         raise HTTPException(status_code=404, detail="Script associado não encontrado")
     
-    job_data = schemas.Job.from_orm(job)
-    job_data.script_content = script.content
-    job_data.script_args_schema = script.args_schema
-    return job_data
+    return {
+        "job_id": job.id,
+        "script_content": script.content,
+        "run_args": job.run_args or {}
+    }
 
 # --- Endpoint para atualizar Job ---
 @router.post("/agent/jobs/{job_id}/report")
