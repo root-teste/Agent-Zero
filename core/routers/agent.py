@@ -22,7 +22,7 @@ def get_pending_job(db: Session = Depends(database.get_db)):
     }
 
 # --- Endpoint para atualizar Job ---
-@router.post("/agent/jobs/{job_id}/report")
+@router.post("/jobs/{job_id}/report")
 def report_job_status(job_id: int, report: schemas.Job, db: Session = Depends(database.get_db)):
     job = db.query(models.Job).filter(models.Job.id == job_id).first()
     if not job:
