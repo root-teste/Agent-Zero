@@ -34,7 +34,7 @@ Para rodar o servidor FastAPI, utilize o Uvicorn:
 
 ```bash
 uvicorn core.main:app --reload
-```
+app.include_router(agent.router)
 
 ## Executando a CLI
 

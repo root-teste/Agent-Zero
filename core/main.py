@@ -1,7 +1,7 @@
 # core/main.py
 from fastapi import FastAPI
 from . import models, database, scheduler_service
-from .routers import scripts, tasks
+from .routers import scripts, tasks, agent
 
 # 1. Cria as tabelas
 models.Base.metadata.create_all(bind=database.engine)
