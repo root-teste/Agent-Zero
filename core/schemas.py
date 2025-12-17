@@ -21,6 +21,8 @@ class TaskCreate(TaskBase):
 
 class Task(TaskBase):
     id: int
+    is_scheduled: bool
+    schedule_interval: Optional[int]
     linked_script_id: Optional[int] = None
     
     class Config:
@@ -64,6 +66,8 @@ class ScriptBase(BaseModel):
     content: str
     # Definição de Argumentos (JSON)
     args_schema: Optional[Dict[str, Any]] = {}
+    is_scheduled: bool = False
+    schedule_interval: Optional[int] = None
 
 class ScriptCreate(ScriptBase):
     pass

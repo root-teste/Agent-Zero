@@ -71,6 +71,8 @@ class Script(Base):
     args_schema = Column(JSON, default={})
     cron_schedule = Column(String, nullable=True)
     is_active_automation = Column(Boolean, default=False)
+    is_scheduled = Column(Boolean, default=False)
+    schedule_interval = Column(Integer, nullable=True)
     
     jobs = relationship("Job", back_populates="script")
 
