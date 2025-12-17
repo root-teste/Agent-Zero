@@ -88,3 +88,35 @@ def start_scheduler():
     scheduler.add_job(lambda: print("Scheduler Ativo"), 'interval', minutes=1)
     scheduler.add_job(lambda: check_schedules(database.SessionLocal()), 'interval', seconds=60)
     scheduler.start()
+from apscheduler.schedulers.background import BackgroundScheduler
+from sqlalchemy.orm import Session
+from datetime import datetime, timedelta
+from .database import SessionLocal
+from .models import Script, Job
+
+def check_scheduled_scripts():
+    """
+    Verifica scripts agendados e cria jobs se necessário.
+    """
+    db = SessionLocal()
+    try:
+        scripts = db.query(Script).filter(Script.is_scheduled == True, Script.schedule_interval > 0).all()
+        for script in scripts:
+            last_job = db.query(Job).filter(Job.script_id == script.id).order_by(Job.finished_at.desc()).first()
+            now = datetime.utcnow()
+            if not last_job or (now - last_job.finished_at) > timedelta(minutes=script.schedule_interval):
+                print(f"[SCHEDULER] Criando job para script agendado: {script.name}")
+                new_job = Job(script_id=script.id, status="pending", run_args={})
+                db.add(new_job)
+        db.commit()
+    finally:
+        db.close()
+
+# Instância global do scheduler
+scheduler = BackgroundScheduler()
+
+def start_scheduler():
+    """Inicia o Scheduler."""
+    scheduler.add_job(check_scheduled_scripts, 'interval', seconds=60)
+    scheduler.start()
+    print("[SYSTEM] Scheduler de Automação Iniciado.")
