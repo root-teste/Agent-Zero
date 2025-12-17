@@ -3,7 +3,6 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from sqlalchemy.orm import Session
 from datetime import datetime
 from . import database, models
-from agent import executor
 
 # Instância global do scheduler
 scheduler = BackgroundScheduler()
@@ -29,14 +28,7 @@ def run_pending_job(task_id: int):
         
         # 2. Executa
         script = db.query(models.Script).filter(models.Script.id == task.script_id).first()
-        result = executor.execute_script_logic(script, task.run_args)
-        
-        # 3. Atualiza Job
-        job.status = result["status"]
-        job.started_at = result["started_at"]
-        job.finished_at = result["finished_at"]
-        job.stdout = result["stdout"]
-        job.stderr = result["stderr"]
+        print('Agendamento: Job criado na fila (Lógica de execução remota pendente)')
         
         # 4. Atualiza a Tarefa Periódica
         task.last_run = datetime.utcnow()
