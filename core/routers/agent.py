@@ -5,7 +5,7 @@ from .. import models, database, schemas
 router = APIRouter()
 
 # --- Endpoint para buscar Job pendente ---
-@router.get("/agent/jobs/pending", response_model=schemas.Job)
+@router.get("/jobs/pending", response_model=schemas.Job)
 def get_pending_job(db: Session = Depends(database.get_db)):
     job = db.query(models.Job).filter(models.Job.status == "pending").order_by(models.Job.id).first()
     if not job:
