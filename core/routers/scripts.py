@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import Dict, Any, List
 from pydantic import BaseModel
-from .. import models, database, schemas, executor
+from .. import models, database, schemas
 
 router = APIRouter()
 
@@ -49,17 +49,9 @@ def run_script(script_id: int, run_req: RunRequest = None, db: Session = Depends
     if not script:
         raise HTTPException(status_code=404, detail="Script não encontrado")
     
-    job = models.Job(script_id=script.id, status="running", run_args=args)
+    job = models.Job(script_id=script.id, status="pending", run_args=args)
     db.add(job)
     db.commit()
-    
-    result_data = executor.execute_script_logic(script, args)
-    
-    job.status = result_data["status"]
-    job.started_at = result_data["started_at"]
-    job.finished_at = result_data["finished_at"]
-    job.stdout = result_data["stdout"]
-    job.stderr = result_data["stderr"]
     
     db.commit()
     db.refresh(job)
