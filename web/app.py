@@ -48,3 +48,45 @@ def main():
 
 if __name__ == "__main__":
     main()
+import streamlit as st
+import requests
+import pandas as pd
+
+API_URL = 'http://127.0.0.1:8000'
+
+st.set_page_config(layout='wide')
+
+def main():
+    st.title("Sistema de Automação C2")
+
+    tabs = st.tabs(["Monitoramento (Logs)", "Controle (Scripts)"])
+
+    with tabs[0]:
+        st.header("Monitoramento (Logs)")
+        if st.button("Atualizar"):
+            response = requests.get(f"{API_URL}/jobs")
+            if response.status_code == 200:
+                jobs = response.json()
+                df = pd.DataFrame(jobs)
+                df['Duration'] = pd.to_datetime(df['finished_at']) - pd.to_datetime(df['started_at'])
+                st.dataframe(df[['id', 'script_id', 'status', 'started_at', 'Duration']])
+            else:
+                st.write("Nenhum job encontrado.")
+
+    with tabs[1]:
+        st.header("Controle (Scripts)")
+        response = requests.get(f"{API_URL}/scripts/")
+        if response.status_code == 200:
+            scripts = response.json()
+            for script in scripts:
+                st.subheader(script['name'])
+                st.write(script['description'])
+                if st.button(f"Executar Agora {script['id']}"):
+                    run_response = requests.post(f"{API_URL}/run/{script['id']}")
+                    if run_response.status_code == 200:
+                        st.success(f"Script {script['id']} executado com sucesso!")
+                    else:
+                        st.error(f"Erro ao executar script {script['id']}.")
+
+if __name__ == "__main__":
+    main()
