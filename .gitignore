@@ -1,1 +1,6 @@
 .aider*
+system.db
+.env
+__pycache__/
+venv/
+.aider*

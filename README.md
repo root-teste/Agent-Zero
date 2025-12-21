@@ -1,6 +1,8 @@
-# Sistema Pessoal de Automação C2
+# Agent-Zero
 
-Este é um sistema pessoal de automação C2, desenvolvido para gerenciar tarefas, projetos, scripts e agendamentos de forma eficiente. Ele utiliza FastAPI para a criação de APIs RESTful e SQLAlchemy para a manipulação do banco de dados.
+Agent-Zero: Um orquestrador pessoal de automação, notas e inteligência artificial privada.
+
+Este é um sistema pessoal de automação, desenvolvido para gerenciar tarefas, projetos, scripts e agendamentos de forma eficiente. Ele utiliza FastAPI para a criação de APIs RESTful e SQLAlchemy para a manipulação do banco de dados.
 
 ## Funcionalidades
 

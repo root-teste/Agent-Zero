@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+sqlalchemy
+requests
+streamlit
+pandas
+apscheduler
+python-dotenv
+typer
+rich
