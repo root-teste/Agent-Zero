@@ -1,4 +1,5 @@
-import streamlit as st
+import os
+from dotenv import load_dotenv
 import requests
 import pandas as pd
 from datetime import datetime
@@ -6,7 +7,9 @@ from datetime import datetime
 # Configuração da página DEVE ser a primeira chamada Streamlit
 st.set_page_config(layout='wide', page_title="Sistema C2")
 
-API_URL = 'http://127.0.0.1:8000'
+load_dotenv()
+API_URL = os.getenv("API_URL")
+HEADERS = {"x-api-key": os.getenv("SYSTEM_API_KEY")}
 
 def main():
     st.title("Sistema de Automação C2")
@@ -24,7 +27,7 @@ def main():
         
         try:
             # Busca histórico de jobs
-            response = requests.get(f"{API_URL}/jobs")
+            response = requests.get(f"{API_URL}/jobs", headers=HEADERS)
             if response.status_code == 200:
                 jobs = response.json()
                 if jobs:
@@ -51,7 +54,7 @@ def main():
     with tabs[1]:
         st.header("Biblioteca de Scripts")
         try:
-            response = requests.get(f"{API_URL}/scripts/")
+            response = requests.get(f"{API_URL}/scripts/", headers=HEADERS)
             if response.status_code == 200:
                 scripts = response.json()
                 for script in scripts:
@@ -61,7 +64,7 @@ def main():
                         
                         # Botão com chave única para evitar erro de ID duplicado
                         if st.button("▶️ Executar Agora", key=f"btn_run_{script['id']}"):
-                            run_res = requests.post(f"{API_URL}/run/{script['id']}")
+                            run_res = requests.post(f"{API_URL}/run/{script['id']}", headers=HEADERS)
                             if run_res.status_code == 200:
                                 st.success(f"Script {script['name']} enviado para fila!")
                             else:
@@ -75,7 +78,7 @@ def main():
     with tabs[2]:
         st.header("Status do Sistema")
         try:
-            r = requests.get(f"{API_URL}/docs")
+            r = requests.get(f"{API_URL}/docs", headers=HEADERS)
             if r.status_code == 200:
                 st.success("✅ API Core: ONLINE")
             else:
@@ -126,7 +129,7 @@ def main():
                                 "schedule_interval": interval
                             }
                             # Chama o endpoint PATCH
-                            patch_res = requests.patch(f"{API_URL}/scripts/{script['id']}", json=payload)
+                            patch_res = requests.patch(f"{API_URL}/scripts/{script['id']}", json=payload, headers=HEADERS)
                             
                             if patch_res.status_code == 200:
                                 st.toast(f"Agendamento de '{script['name']}' atualizado!", icon="✅")

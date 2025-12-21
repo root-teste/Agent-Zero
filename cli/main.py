@@ -1,8 +1,9 @@
 # cli/main.py
 
-import sys
 import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from dotenv import load_dotenv
+
+load_dotenv()
 import typer
 import requests
 import json
@@ -14,7 +15,8 @@ from ai_clients import ollama_bridge
 app = typer.Typer()
 console = Console()
 
-API_URL = "http://127.0.0.1:8000"
+API_URL = os.getenv("API_URL")
+HEADERS = {"x-api-key": os.getenv("SYSTEM_API_KEY")}
 
 # --- Funções Auxiliares ---
 
@@ -33,7 +35,7 @@ def check_server():
 def list_tasks():
     """Lista todas as tarefas pendentes."""
     check_server()
-    response = requests.get(f"{API_URL}/tasks/")
+    response = requests.get(f"{API_URL}/tasks/", headers=HEADERS)
     tasks = response.json()
 
     if not tasks:
@@ -60,7 +62,7 @@ def add_task(title: str, project_id: int = 0):
     if project_id > 0:
         payload["project_id"] = project_id
     
-    response = requests.post(f"{API_URL}/tasks/", json=payload)
+    response = requests.post(f"{API_URL}/tasks/", json=payload, headers=HEADERS)
     
     if response.status_code == 200:
         data = response.json()
@@ -74,7 +76,7 @@ def add_task(title: str, project_id: int = 0):
 def list_scripts():
     """Lista os scripts disponíveis."""
     check_server()
-    response = requests.get(f"{API_URL}/scripts/")
+    response = requests.get(f"{API_URL}/scripts/", headers=HEADERS)
     scripts = response.json()
 
     table = Table(title="Biblioteca de Scripts")
@@ -108,7 +110,7 @@ def run_script(script_id: int, args: str = "{}"):
 
     rprint("[dim]Enviando comando para o Core App...[/dim]")
     
-    response = requests.post(f"{API_URL}/run/{script_id}", json={"args": args_dict})
+    response = requests.post(f"{API_URL}/run/{script_id}", json={"args": args_dict}, headers=HEADERS)
     
     if response.status_code == 200:
         job = response.json()
@@ -161,7 +163,7 @@ def create_ai_script(instruction: str):
             "content": script_data['content'],
             "interpreter": "python3"
         }
-        response = requests.post(f"{API_URL}/scripts/", json=payload)
+        response = requests.post(f"{API_URL}/scripts/", json=payload, headers=HEADERS)
         if response.status_code == 200:
             new_script = response.json()
             rprint(f"[bold green]Sucesso![/bold green] Script salvo com ID: {new_script['id']}")
@@ -177,9 +179,9 @@ def advisor(question: str = "O que devo priorizar hoje?"):
     rprint("[dim]Coletando dados do sistema...[/dim]")
     
     try:
-        tasks = requests.get(f"{API_URL}/tasks/").json()
-        scripts = requests.get(f"{API_URL}/scripts/").json()
-        projects = requests.get(f"{API_URL}/projects/").json()
+        tasks = requests.get(f"{API_URL}/tasks/", headers=HEADERS).json()
+        scripts = requests.get(f"{API_URL}/scripts/", headers=HEADERS).json()
+        projects = requests.get(f"{API_URL}/projects/", headers=HEADERS).json()
     except Exception as e:
         rprint(f"[red]Erro ao buscar dados:[/red] {e}")
         return
@@ -229,7 +231,7 @@ def cat_script(script_id: int):
     Ex: python cli/main.py cat 1
     """
     check_server()
-    response = requests.get(f"{API_URL}/scripts/{script_id}")
+    response = requests.get(f"{API_URL}/scripts/{script_id}", headers=HEADERS)
     
     if response.status_code == 200:
         script = response.json()

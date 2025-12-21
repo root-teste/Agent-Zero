@@ -1,5 +1,6 @@
 # core/main.py
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
+from core.security import get_api_key
 from . import models, database, scheduler_service
 from core.scheduler_service import start_scheduler
 from .routers import scripts, tasks, agent
@@ -7,7 +8,7 @@ from .routers import scripts, tasks, agent
 # 1. Cria as tabelas
 models.Base.metadata.create_all(bind=database.engine)
 
-app = FastAPI(title="Sistema Pessoal Core", version="0.3.0")
+app = FastAPI(title="Sistema Pessoal Core", version="0.3.0", dependencies=[Depends(get_api_key)])
 
 app.include_router(agent.router, prefix='/agent')
 

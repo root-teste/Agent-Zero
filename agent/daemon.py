@@ -3,12 +3,17 @@ import time
 from datetime import datetime
 from agent.executor import execute_script_logic
 
-API_URL = 'http://127.0.0.1:8000'
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+API_URL = os.getenv("API_URL")
+HEADERS = {"x-api-key": os.getenv("SYSTEM_API_KEY")}
 
 def run_worker():
     while True:
         try:
-            response = requests.get(f"{API_URL}/agent/jobs/pending")
+            response = requests.get(f"{API_URL}/agent/jobs/pending", headers=HEADERS)
             
             if response.status_code in [204, 404]:
                 time.sleep(2)
@@ -33,7 +38,7 @@ def run_worker():
                     "finished_at": datetime.utcnow().isoformat()
                 }
                 
-                requests.post(f"{API_URL}/agent/jobs/{job_id}/report", json=report_data)
+                requests.post(f"{API_URL}/agent/jobs/{job_id}/report", json=report_data, headers=HEADERS)
         
         except requests.exceptions.RequestException as e:
             print(f"Erro de conexão: {e}")
