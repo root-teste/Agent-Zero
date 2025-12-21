@@ -106,20 +106,3 @@ class Job(JobBase):
         from_attributes = True
 # core/schemas.py
 
-class PeriodicTaskBase(BaseModel):
-    name: str
-    script_id: int
-    interval_minutes: int
-    run_args: Optional[dict] = {}
-    is_active: bool = True
-
-class PeriodicTaskCreate(PeriodicTaskBase):
-    pass
-
-class PeriodicTask(PeriodicTaskBase):
-    id: int
-    last_run: Optional[datetime] = None
-    
-    class Config:
-        from_attributes = True
-
