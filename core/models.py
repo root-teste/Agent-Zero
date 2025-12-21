@@ -97,21 +97,4 @@ class Job(Base):
     script = relationship("Script", back_populates="jobs")
 # core/models.py
 
-class PeriodicTask(Base):
-    __tablename__ = "periodic_tasks"
-    
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, unique=True)
-    script_id = Column(Integer, ForeignKey("scripts.id"))
-    
-    # Frequência em minutos (para simplificar o MVP)
-    # No futuro podemos usar expressões CRON completas
-    interval_minutes = Column(Integer, default=60) 
-    
-    # Argumentos fixos para passar ao script
-    run_args = Column(JSON, default={})
-    
-    is_active = Column(Boolean, default=True)
-    last_run = Column(DateTime, nullable=True)
-    
-    script = relationship("Script")
+
