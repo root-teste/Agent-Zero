@@ -123,22 +123,3 @@ class PeriodicTask(PeriodicTaskBase):
     class Config:
         from_attributes = True
 
-# core/schemas.py (Adicione isso no final)
-
-# --- Schemas de Agendamento (PeriodicTask) ---
-class PeriodicTaskBase(BaseModel):
-    name: str
-    script_id: int
-    interval_minutes: int = 60
-    run_args: Optional[dict] = {}
-    is_active: bool = True
-
-class PeriodicTaskCreate(PeriodicTaskBase):
-    pass
-
-class PeriodicTask(PeriodicTaskBase):
-    id: int
-    last_run: Optional[datetime] = None
-    
-    class Config:
-        from_attributes = True
