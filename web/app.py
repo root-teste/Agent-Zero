@@ -15,8 +15,8 @@ HEADERS = {"x-api-key": os.getenv("SYSTEM_API_KEY")}
 def main():
     st.title("Sistema de Automação C2")
 
-    # Definição das 4 Abas
-    tabs = st.tabs(["Monitoramento", "Controle (Scripts)", "Setup", "Agendamento"])
+    # Definição das 5 Abas
+    tabs = st.tabs(["Monitoramento", "Controle (Scripts)", "Setup", "Agendamento", "🧠 Notas"])
 
     # --- ABA 1: MONITORAMENTO ---
     with tabs[0]:
