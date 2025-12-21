@@ -85,7 +85,27 @@ class ScriptUpdate(BaseModel):
     is_scheduled: Optional[bool] = None
     schedule_interval: Optional[int] = None
 
-# --- Schemas de Jobs (Execuções) ---
+# --- Schemas de Notas (Note) ---
+class NoteBase(BaseModel):
+    title: str
+    content: str
+    area_id: int
+    project_id: Optional[int] = None
+
+class NoteCreate(NoteBase):
+    pass
+
+class NoteUpdate(BaseModel):
+    title: Optional[str] = None
+    content: Optional[str] = None
+
+class Note(NoteBase):
+    id: int
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
 class JobBase(BaseModel):
     script_id: int
     status: str = "pending"

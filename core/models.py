@@ -56,7 +56,18 @@ class Task(Base):
     project = relationship("Project", back_populates="tasks")
     script = relationship("Script")
 
-# --- Modelos de Execução (Engine) ---
+# --- Modelos de Notas ---
+
+class Note(Base):
+    __tablename__ = "notes"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String, index=True)
+    content = Column(Text, nullable=False)
+    area_id = Column(Integer, ForeignKey("areas.id"))
+    project_id = Column(Integer, ForeignKey("projects.id"), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 class Script(Base):
     __tablename__ = "scripts"

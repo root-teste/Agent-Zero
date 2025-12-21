@@ -141,5 +141,40 @@ def main():
         except Exception as e:
             st.error(f"Erro ao carregar dados de agendamento: {e}")
 
-if __name__ == "__main__":
+    # --- ABA 5: NOTAS ---
+    with tabs[4]:
+        st.header("Notas")
+        try:
+            response = requests.get(f"{API_URL}/notes/", headers=HEADERS)
+            if response.status_code == 200:
+                notes = response.json()
+                for note in notes:
+                    with st.expander(f"📝 {note['title']} (ID: {note['id']})"):
+                        st.markdown(note['content'])
+            else:
+                st.warning("Não foi possível carregar as notas.")
+        except Exception as e:
+            st.error(f"Erro ao carregar notas: {e}")
+
+        st.subheader("Criar Nova Nota")
+        note_title = st.text_input("Título da Nota")
+        note_content = st.text_area("Conteúdo da Nota (Markdown)")
+        area_id = st.number_input("ID da Área", min_value=1, step=1)
+        project_id = st.number_input("ID do Projeto (Opcional)", min_value=0, step=1)
+
+        if st.button("Salvar Nota"):
+            payload = {
+                "title": note_title,
+                "content": note_content,
+                "area_id": area_id,
+                "project_id": project_id if project_id > 0 else None
+            }
+            try:
+                response = requests.post(f"{API_URL}/notes/", json=payload, headers=HEADERS)
+                if response.status_code == 200:
+                    st.success("Nota criada com sucesso!")
+                else:
+                    st.error("Erro ao criar nota.")
+            except Exception as e:
+                st.error(f"Erro ao criar nota: {e}")
     main()
