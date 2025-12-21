@@ -1,92 +1,141 @@
 import streamlit as st
 import requests
 import pandas as pd
+from datetime import datetime
+
+# Configuração da página DEVE ser a primeira chamada Streamlit
+st.set_page_config(layout='wide', page_title="Sistema C2")
 
 API_URL = 'http://127.0.0.1:8000'
-
-def main():
-    st.title("Dashboard do Sistema C2")
-
-    tabs = st.tabs(["Monitor de Jobs", "Biblioteca de Scripts", "Setup"])
-
-    with tabs[0]:
-        st.header("Monitor de Jobs")
-        response = requests.get(f"{API_URL}/agent/jobs/pending")
-        if response.status_code == 200:
-            jobs = response.json()
-            df = pd.DataFrame(jobs)
-            df['Duration'] = pd.to_datetime(df['finished_at']) - pd.to_datetime(df['started_at'])
-            st.dataframe(df[['id', 'script_name', 'status', 'started_at', 'Duration']])
-        else:
-            st.write("Nenhum job pendente encontrado.")
-
-    with tabs[1]:
-        st.header("Biblioteca de Scripts")
-        response = requests.get(f"{API_URL}/scripts/")
-        if response.status_code == 200:
-            scripts = response.json()
-            for script in scripts:
-                st.subheader(script['name'])
-                st.write(script['description'])
-                if st.button(f"Executar Agora {script['id']}"):
-                    run_response = requests.post(f"{API_URL}/run/{script['id']}")
-                    if run_response.status_code == 200:
-                        st.success(f"Script {script['id']} executado com sucesso!")
-                    else:
-                        st.error(f"Erro ao executar script {script['id']}.")
-
-    with tabs[2]:
-        st.header("Setup")
-        try:
-            response = requests.get(API_URL)
-            if response.status_code == 200:
-                st.success("API Online")
-            else:
-                st.error("API Offline")
-        except requests.exceptions.RequestException:
-            st.error("API Offline")
-
-if __name__ == "__main__":
-    main()
-import streamlit as st
-import requests
-import pandas as pd
-
-API_URL = 'http://127.0.0.1:8000'
-
-st.set_page_config(layout='wide')
 
 def main():
     st.title("Sistema de Automação C2")
 
-    tabs = st.tabs(["Monitoramento (Logs)", "Controle (Scripts)"])
+    # Definição das 4 Abas
+    tabs = st.tabs(["Monitoramento", "Controle (Scripts)", "Setup", "Agendamento"])
 
+    # --- ABA 1: MONITORAMENTO ---
     with tabs[0]:
-        st.header("Monitoramento (Logs)")
-        if st.button("Atualizar"):
+        st.header("Histórico de Execuções")
+        col1, col2 = st.columns([1, 4])
+        with col1:
+            if st.button("🔄 Atualizar Lista"):
+                st.rerun()
+        
+        try:
+            # Busca histórico de jobs
             response = requests.get(f"{API_URL}/jobs")
             if response.status_code == 200:
                 jobs = response.json()
-                df = pd.DataFrame(jobs)
-                df['Duration'] = pd.to_datetime(df['finished_at']) - pd.to_datetime(df['started_at'])
-                st.dataframe(df[['id', 'script_id', 'status', 'started_at', 'Duration']])
+                if jobs:
+                    df = pd.DataFrame(jobs)
+                    # Conversão de datas e cálculo de duração
+                    df['started_at'] = pd.to_datetime(df['started_at'])
+                    df['finished_at'] = pd.to_datetime(df['finished_at'])
+                    df['Duração'] = df['finished_at'] - df['started_at']
+                    
+                    # Exibição organizada
+                    st.dataframe(
+                        df[['id', 'script_id', 'status', 'started_at', 'Duração']],
+                        use_container_width=True,
+                        hide_index=True
+                    )
+                else:
+                    st.info("Nenhum histórico de execução encontrado.")
             else:
-                st.write("Nenhum job encontrado.")
+                st.error(f"Erro na API: {response.status_code}")
+        except Exception as e:
+            st.error(f"API Offline ou erro de conexão: {e}")
 
+    # --- ABA 2: CONTROLE (SCRIPTS) ---
     with tabs[1]:
-        st.header("Controle (Scripts)")
-        response = requests.get(f"{API_URL}/scripts/")
-        if response.status_code == 200:
-            scripts = response.json()
-            for script in scripts:
-                st.subheader(script['name'])
-                st.write(script['description'])
-                if st.button(f"Executar Agora {script['id']}"):
-                    run_response = requests.post(f"{API_URL}/run/{script['id']}")
-                    if run_response.status_code == 200:
-                        st.success(f"Script {script['id']} executado com sucesso!")
-                    else:
-                        st.error(f"Erro ao executar script {script['id']}.")
+        st.header("Biblioteca de Scripts")
+        try:
+            response = requests.get(f"{API_URL}/scripts/")
+            if response.status_code == 200:
+                scripts = response.json()
+                for script in scripts:
+                    with st.expander(f"📜 {script['name']} (ID: {script['id']})"):
+                        st.write(script.get('description', 'Sem descrição'))
+                        st.code(script['content'], language='python')
+                        
+                        # Botão com chave única para evitar erro de ID duplicado
+                        if st.button("▶️ Executar Agora", key=f"btn_run_{script['id']}"):
+                            run_res = requests.post(f"{API_URL}/run/{script['id']}")
+                            if run_res.status_code == 200:
+                                st.success(f"Script {script['name']} enviado para fila!")
+                            else:
+                                st.error("Falha ao iniciar script.")
+            else:
+                st.warning("Não foi possível carregar os scripts.")
+        except Exception as e:
+            st.error(f"Erro ao carregar scripts: {e}")
+
+    # --- ABA 3: SETUP ---
+    with tabs[2]:
+        st.header("Status do Sistema")
+        try:
+            r = requests.get(f"{API_URL}/docs")
+            if r.status_code == 200:
+                st.success("✅ API Core: ONLINE")
+            else:
+                st.warning(f"⚠️ API Core retornou: {r.status_code}")
+        except:
+            st.error("❌ API Core: OFFLINE")
+            
+        st.info("ℹ️ Para ver o Agente, verifique o terminal onde 'daemon.py' está rodando.")
+
+    # --- ABA 4: AGENDAMENTO (NOVA) ---
+    with tabs[3]:
+        st.header("Automação e Agendamento")
+        st.markdown("Configure quais scripts devem rodar automaticamente.")
+        
+        try:
+            # Reutiliza a lista de scripts
+            response = requests.get(f"{API_URL}/scripts/")
+            if response.status_code == 200:
+                scripts = response.json()
+                
+                # Cria um formulário para cada script
+                for script in scripts:
+                    with st.container():
+                        c1, c2, c3, c4 = st.columns([2, 1, 1, 1])
+                        
+                        # Coluna 1: Nome
+                        c1.subheader(script['name'])
+                        
+                        # Coluna 2: Checkbox Ativo
+                        is_scheduled = c2.checkbox(
+                            "Agendado", 
+                            value=script.get('is_scheduled', False),
+                            key=f"check_sched_{script['id']}"
+                        )
+                        
+                        # Coluna 3: Input Minutos
+                        interval = c3.number_input(
+                            "Minutos", 
+                            min_value=1, 
+                            value=script.get('schedule_interval', 60) or 60,
+                            key=f"num_sched_{script['id']}"
+                        )
+                        
+                        # Coluna 4: Botão Salvar
+                        if c4.button("💾 Salvar", key=f"save_sched_{script['id']}"):
+                            payload = {
+                                "is_scheduled": is_scheduled,
+                                "schedule_interval": interval
+                            }
+                            # Chama o endpoint PATCH
+                            patch_res = requests.patch(f"{API_URL}/scripts/{script['id']}", json=payload)
+                            
+                            if patch_res.status_code == 200:
+                                st.toast(f"Agendamento de '{script['name']}' atualizado!", icon="✅")
+                            else:
+                                st.error("Erro ao salvar configuração.")
+                        
+                        st.divider()
+        except Exception as e:
+            st.error(f"Erro ao carregar dados de agendamento: {e}")
 
 if __name__ == "__main__":
     main()
