@@ -1,16 +1,16 @@
 # cli/main.py
 
 import os
-from dotenv import load_dotenv
-
-load_dotenv()
-import typer
-import requests
 import json
+import requests
+from dotenv import load_dotenv
+import typer
 from rich.console import Console
 from rich.table import Table
 from rich import print as rprint
 from ai_clients import ollama_bridge
+
+load_dotenv()
 
 app = typer.Typer()
 console = Console()
@@ -245,27 +245,19 @@ def cat_script(script_id: int):
     else:
         rprint("[red]Script não encontrado.[/red]")
 
-if __name__ == "__main__":
-    app()
-import requests
-
+@app.command("schedule")
 def schedule_script(script_id: int, interval_minutes: int):
     """
     Agenda um script para execução periódica.
     """
-    url = f"http://127.0.0.1:8000/scripts/{script_id}"
+    check_server()
     payload = {
         "is_scheduled": True,
         "schedule_interval": interval_minutes
     }
-    response = requests.patch(url, json=payload)
+    response = requests.patch(f"{API_URL}/scripts/{script_id}", json=payload, headers=HEADERS)
     
     if response.status_code == 200:
-        print(f"Script {script_id} agendado para rodar a cada {interval_minutes} minutos.")
+        rprint(f"[bold green]Sucesso![/bold green] Script {script_id} agendado para rodar a cada {interval_minutes} minutos.")
     else:
-        print(f"Erro ao agendar script {script_id}: {response.status_code} - {response.text}")
-
-# Exemplo de uso
-if __name__ == "__main__":
-    # Substitua pelos valores desejados
-    schedule_script(1, 30)
+        rprint(f"[bold red]Erro ao agendar script {script_id}:[/bold red] {response.status_code} - {response.text}")
