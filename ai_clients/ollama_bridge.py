@@ -3,17 +3,22 @@ import requests
 import json
 import re
 import time
+from core.config import settings
+from core import local_model
 
 OLLAMA_URL = "http://localhost:11434/api/generate"
-DEFAULT_MODEL = "llama3.2:3b" 
+DEFAULT_MODEL = None
 
 def generate_response(prompt: str, model: str = DEFAULT_MODEL) -> str:
-    payload = {"model": model, "prompt": prompt, "stream": False}
+    if not settings.LOCAL_MODEL_ENABLED:
+        return "Modelo desativado. Configure inferência local verificada antes de ativar AGENT_ZERO_ENABLE_LOCAL_MODEL."
+    if model and model != settings.OLLAMA_MODEL:
+        return "Selecione o modelo na configuração local do servidor."
     try:
-        r = requests.post(OLLAMA_URL, json=payload, timeout=300)
-        return r.json().get("response", "")
-    except Exception as e:
-        return f"Erro de conexão: {e}"
+        answer, _ = local_model.chat([{"role": "user", "content": prompt}])
+        return answer
+    except local_model.ModelUnavailable as exc:
+        return str(exc)
 
 def generate_automation_script(user_request: str, model: str = DEFAULT_MODEL) -> dict:
     # Prompt simplificado e direto para evitar confusão

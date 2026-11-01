@@ -1,22 +1,84 @@
 import os
 from dotenv import load_dotenv
 import streamlit as st
-import requests
+from core import http_client as requests
+from core.config import settings
 import pandas as pd
 from datetime import datetime
 
 # Configuração da página DEVE ser a primeira chamada Streamlit
-st.set_page_config(layout='wide', page_title="Sistema C2")
+st.set_page_config(layout='wide', page_title="Agente Zero")
 
 load_dotenv()
-API_URL = os.getenv("API_URL")
-HEADERS = {"x-api-key": os.getenv("SYSTEM_API_KEY")}
+API_URL = settings.API_URL
+HEADERS = {"x-api-key": settings.API_KEY}
 
 def main():
-    st.title("Sistema de Automação C2")
+    st.title("Agente Zero — núcleo local")
+    with st.expander("Conversar com o Agente Zero", expanded=True):
+        try:
+            available = requests.get(f"{API_URL}/chat/conversations")
+            available.raise_for_status()
+            items = available.json()
+            if st.button("Nova conversa"):
+                created = requests.post(f"{API_URL}/chat/conversations", json={"title": "Nova conversa"})
+                created.raise_for_status()
+                st.session_state["conversation"] = created.json()["id"]
+                st.rerun()
+            if items:
+                labels = {c["id"]: f"{c['title']} · {c['id']}" for c in items}
+                current = st.session_state.get("conversation", items[0]["id"])
+                selected = st.selectbox("Conversa", list(labels), format_func=labels.get,
+                                        index=list(labels).index(current) if current in labels else 0)
+                history = requests.get(f"{API_URL}/chat/conversations/{selected}")
+                history.raise_for_status()
+                for message in history.json():
+                    with st.chat_message(message["role"]):
+                        st.write(message["content"])
+                        for source in message.get("sources") or []:
+                            st.caption(f"Fonte: {source['path']} · {source['reference']}")
+                with st.form("chat_message", clear_on_submit=True):
+                    content = st.text_area("Mensagem", max_chars=6000)
+                    use_memory = st.checkbox("Consultar o segundo cérebro")
+                    submitted = st.form_submit_button("Enviar")
+                if submitted and content.strip():
+                    with st.spinner("A preparar a resposta local…"):
+                        reply = requests.post(f"{API_URL}/chat/conversations/{selected}/messages",
+                                              json={"content": content, "use_memory": use_memory}, timeout=190)
+                    if reply.status_code == 200:
+                        st.rerun()
+                    else:
+                        st.warning(reply.json().get("detail", "Resposta indisponível"))
+            else:
+                st.info("Crie uma conversa para começar.")
+        except requests.exceptions.RequestException:
+            st.info("A conversa estará disponível quando o núcleo local estiver ligado.")
+    st.caption("Memória privada local. Execução de scripts desativada por padrão nesta etapa.")
 
     # Definição das 5 Abas
-    tabs = st.tabs(["Monitoramento", "Controle (Scripts)", "Setup", "Agendamento", "🧠 Notas"])
+    tabs = st.tabs(["Monitoramento", "Controle (Scripts)", "Setup", "Agendamento", "🧠 Notas", "Memória local"])
+
+    with tabs[5]:
+        st.header("Consultar o segundo cérebro")
+        st.caption("Busca local com fontes. Nenhum modelo ou agente externo recebe esta consulta.")
+        with st.form("memory_search"):
+            query = st.text_input("O que procura?", max_chars=300, key="memory_query")
+            submitted = st.form_submit_button("Pesquisar", key="memory_submit")
+        if submitted and query.strip():
+            try:
+                response = requests.post(f"{API_URL}/memory/search", json={"query": query, "limit": 5})
+                if response.status_code == 200:
+                    results = response.json()["results"]
+                    if not results:
+                        st.info("Não foram encontradas fontes para esta consulta.")
+                    for result in results:
+                        st.subheader(result["title"])
+                        st.text(result["excerpt"])
+                        st.caption(f"Fonte: {result['path']} · {result['reference']}")
+                else:
+                    st.warning("Busca indisponível. Verifique a configuração local e o índice.")
+            except requests.exceptions.RequestException:
+                st.error("Não foi possível consultar o núcleo local.")
 
     # --- ABA 1: MONITORAMENTO ---
     with tabs[0]:
@@ -64,7 +126,7 @@ def main():
                         st.code(script['content'], language='python')
                         
                         # Botão com chave única para evitar erro de ID duplicado
-                        if st.button("▶️ Executar Agora", key=f"btn_run_{script['id']}"):
+                        if st.button("▶️ Executar Agora", key=f"btn_run_{script['id']}", disabled=not settings.EXECUTION_ENABLED):
                             run_res = requests.post(f"{API_URL}/run/{script['id']}", headers=HEADERS)
                             if run_res.status_code == 200:
                                 st.success(f"Script {script['name']} enviado para fila!")
@@ -79,7 +141,7 @@ def main():
     with tabs[2]:
         st.header("Status do Sistema")
         try:
-            r = requests.get(f"{API_URL}/docs", headers=HEADERS)
+            r = requests.get(f"{API_URL}/health", headers=HEADERS)
             if r.status_code == 200:
                 st.success("✅ API Core: ONLINE")
             else:
@@ -177,4 +239,6 @@ def main():
                     st.error("Erro ao criar nota.")
             except Exception as e:
                 st.error(f"Erro ao criar nota: {e}")
+
+if __name__ == "__main__":
     main()

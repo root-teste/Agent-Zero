@@ -11,7 +11,7 @@ def list_notes(db: Session = Depends(database.get_db)):
 
 @router.post("/notes/", response_model=schemas.Note)
 def create_note(note: schemas.NoteCreate, db: Session = Depends(database.get_db)):
-    db_note = models.Note(**note.dict())
+    db_note = models.Note(**note.model_dump())
     db.add(db_note)
     db.commit()
     db.refresh(db_note)

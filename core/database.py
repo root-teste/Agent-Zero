@@ -1,15 +1,16 @@
 # core/database.py
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import declarative_base
 from sqlalchemy.orm import sessionmaker
+from .config import settings
 
 # Define o arquivo do banco de dados local
-SQLALCHEMY_DATABASE_URL = "sqlite:///./system.db"
+SQLALCHEMY_DATABASE_URL = settings.DATABASE_URL
 
 # Cria a engine de conexão
 # check_same_thread=False é necessário apenas para SQLite
 engine = create_engine(
-    SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
+    SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False, "timeout": 15} if SQLALCHEMY_DATABASE_URL.startswith("sqlite:") else {}
 )
 
 # Cria a sessão que será usada nas requisições

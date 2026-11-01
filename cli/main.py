@@ -2,7 +2,8 @@
 
 import os
 import json
-import requests
+from core import http_client as requests
+from core.config import settings
 from dotenv import load_dotenv
 import typer
 from rich.console import Console
@@ -15,16 +16,16 @@ load_dotenv()
 app = typer.Typer()
 console = Console()
 
-API_URL = os.getenv("API_URL")
-HEADERS = {"x-api-key": os.getenv("SYSTEM_API_KEY")}
+API_URL = settings.API_URL
+HEADERS = {"x-api-key": settings.API_KEY}
 
 # --- Funções Auxiliares ---
 
 def check_server():
     """Verifica se a API está online."""
     try:
-        requests.get(API_URL)
-    except requests.exceptions.ConnectionError:
+        requests.get(f"{API_URL}/health").raise_for_status()
+    except requests.exceptions.RequestException:
         rprint("[bold red]Erro:[/bold red] O Core App não está rodando.")
         rprint(f"Certifique-se de rodar: [green]uvicorn core.main:app --reload[/green]")
         raise typer.Exit(code=1)
@@ -114,6 +115,9 @@ def run_script(script_id: int, args: str = "{}"):
     
     if response.status_code == 200:
         job = response.json()
+        if job["status"] == "pending":
+            rprint(f"Trabalho {job['id']} na fila. Consulte o histórico.")
+            return
         panel_color = "green" if job['status'] == "success" else "red"
         rprint(f"\n[bold {panel_color}]Status: {job['status'].upper()}[/bold {panel_color}]")
         rprint(f"Início: {job['started_at']}")
@@ -199,7 +203,7 @@ def advisor(question: str = "O que devo priorizar hoje?"):
 def magic_do(instruction: str):
     """Comando inteligente: Tenta entender o que você quer executar."""
     check_server()
-    scripts = requests.get(f"{API_URL}/scripts/").json()
+    scripts = requests.get(f"{API_URL}/scripts/", headers=HEADERS, timeout=15).json()
     if not scripts:
         rprint("[red]Nenhum script disponível.[/red]")
         return
@@ -261,3 +265,7 @@ def schedule_script(script_id: int, interval_minutes: int):
         rprint(f"[bold green]Sucesso![/bold green] Script {script_id} agendado para rodar a cada {interval_minutes} minutos.")
     else:
         rprint(f"[bold red]Erro ao agendar script {script_id}:[/bold red] {response.status_code} - {response.text}")
+
+
+if __name__ == "__main__":
+    app()

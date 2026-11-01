@@ -1,51 +1,22 @@
-import os
+"""Exporta código rastreado; rever antes de partilhar."""
+from pathlib import Path
+import subprocess
 
-# Pastas e arquivos para ignorar
-IGNORE_DIRS = {'venv', '__pycache__', '.git', '.idea', '.vscode', 'system.db'}
-IGNORE_FILES = {'system.db', '.env', 'poetry.lock', 'package-lock.json'}
-EXTENSIONS = {'.py', '.yaml', '.json', '.md', '.sql'}
+ROOT = Path(__file__).resolve().parents[1]
+
 
 def generate_context():
-    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    output = []
-    
-    output.append("=== ESTRUTURA DO PROJETO ===")
-    for root, dirs, files in os.walk(project_root):
-        # Filtra pastas ignoradas
-        dirs[:] = [d for d in dirs if d not in IGNORE_DIRS]
-        
-        level = root.replace(project_root, '').count(os.sep)
-        indent = ' ' * 4 * (level)
-        output.append(f"{indent}{os.path.basename(root)}/")
-        subindent = ' ' * 4 * (level + 1)
-        for f in files:
-            if f not in IGNORE_FILES:
-                output.append(f"{subindent}{f}")
+    result = subprocess.run(["git", "ls-files", "-z"], cwd=ROOT, check=True, capture_output=True)
+    print("Contexto de código rastreado — rever antes de partilhar.")
+    for name in result.stdout.decode("utf-8").split("\0"):
+        if not name:
+            continue
+        path = ROOT / name
+        if path.suffix not in {".py", ".ps1"} or path.is_symlink() or not path.resolve().is_relative_to(ROOT):
+            continue
+        if path.is_file() and path.stat().st_size <= 100_000:
+            print(f"\n--- {name} ---\n{path.read_text(encoding='utf-8-sig')}")
 
-    output.append("\n=== CONTEÚDO DOS ARQUIVOS ===")
-    
-    for root, dirs, files in os.walk(project_root):
-        dirs[:] = [d for d in dirs if d not in IGNORE_DIRS]
-        
-        for file in files:
-            if file in IGNORE_FILES:
-                continue
-            
-            ext = os.path.splitext(file)[1]
-            if ext not in EXTENSIONS:
-                continue
-                
-            file_path = os.path.join(root, file)
-            rel_path = os.path.relpath(file_path, project_root)
-            
-            output.append(f"\n--- ARQUIVO: {rel_path} ---")
-            try:
-                with open(file_path, 'r', encoding='utf-8') as f:
-                    output.append(f.read())
-            except Exception as e:
-                output.append(f"[Erro ao ler arquivo: {e}]")
-                
-    print("\n".join(output))
 
 if __name__ == "__main__":
     generate_context()

@@ -1,5 +1,5 @@
 # core/schemas.py
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict, Field
 from typing import List, Optional, Any, Dict
 from datetime import datetime
 from enum import Enum
@@ -21,12 +21,9 @@ class TaskCreate(TaskBase):
 
 class Task(TaskBase):
     id: int
-    is_scheduled: bool
-    schedule_interval: Optional[int]
     linked_script_id: Optional[int] = None
     
-    class Config:
-        from_attributes = True 
+    model_config = ConfigDict(from_attributes=True)
 
 # --- Schemas de Projeto (Project) ---
 class ProjectBase(BaseModel):
@@ -40,8 +37,7 @@ class Project(ProjectBase):
     id: int
     tasks: List[Task] = []
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 # --- Schemas de Área (Area) ---
 class AreaBase(BaseModel):
@@ -55,8 +51,7 @@ class Area(AreaBase):
     id: int
     projects: List[Project] = []
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 # --- Schemas de Scripts ---
 class ScriptBase(BaseModel):
@@ -65,9 +60,9 @@ class ScriptBase(BaseModel):
     interpreter: str = "python3"
     content: str
     # Definição de Argumentos (JSON)
-    args_schema: Optional[Dict[str, Any]] = {}
+    args_schema: Dict[str, Any] = Field(default_factory=dict)
     is_scheduled: bool = False
-    schedule_interval: Optional[int] = None
+    schedule_interval: Optional[int] = Field(default=None, ge=1)
 
 class ScriptCreate(ScriptBase):
     pass
@@ -75,15 +70,14 @@ class ScriptCreate(ScriptBase):
 class Script(ScriptBase):
     id: int
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 # --- Schemas de Atualização de Script ---
 class ScriptUpdate(BaseModel):
     name: Optional[str] = None
     content: Optional[str] = None
     is_scheduled: Optional[bool] = None
-    schedule_interval: Optional[int] = None
+    schedule_interval: Optional[int] = Field(default=None, ge=1)
 
 # --- Schemas de Notas (Note) ---
 class NoteBase(BaseModel):
@@ -104,8 +98,7 @@ class Note(NoteBase):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 class JobBase(BaseModel):
     script_id: int
     status: str = "pending"
@@ -122,7 +115,6 @@ class Job(JobBase):
     stdout: Optional[str] = None
     stderr: Optional[str] = None
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 # core/schemas.py
 
