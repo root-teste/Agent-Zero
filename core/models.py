@@ -1,4 +1,5 @@
 # core/models.py
+
 from sqlalchemy import Column, Integer, String, Text, ForeignKey, DateTime, JSON, Boolean, Enum
 from sqlalchemy.orm import relationship
 from datetime import datetime
@@ -20,6 +21,7 @@ class JobStatus(str, enum.Enum):
     RUNNING = "running"
     SUCCESS = "success"
     FAILED = "failed"
+    TIMEOUT = "timeout"
 
 # --- Modelos de Organização ---
 
@@ -108,4 +110,21 @@ class Job(Base):
     script = relationship("Script", back_populates="jobs")
 # core/models.py
 
+
+
+class Conversation(Base):
+    __tablename__ = "conversations"
+    id = Column(Integer, primary_key=True)
+    title = Column(String(120), nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class ChatMessage(Base):
+    __tablename__ = "chat_messages"
+    id = Column(Integer, primary_key=True)
+    conversation_id = Column(Integer, ForeignKey("conversations.id"), nullable=False, index=True)
+    role = Column(String(20), nullable=False)
+    content = Column(Text, nullable=False)
+    model = Column(String(200), nullable=True)
+    sources = Column(JSON, default=list)
 

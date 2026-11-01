@@ -4,3 +4,47 @@ system.db
 __pycache__/
 venv/
 .aider*
+
+.venv/
+.pytest_cache/
+*.db-wal
+*.db-shm
+*.sqlite
+
+# Configuração e credenciais privadas
+.env.*
+!.env.example
+secrets.*
+*.pem
+*.key
+*.p12
+*.pfx
+.streamlit/secrets.toml
+credentials*.json
+token*.json
+# Dados, memória e resultados privados
+*.db
+*.sqlite3
+*.log
+logs/
+data/
+private/
+backups/
+recordings/
+transcripts/
+uploads/
+outputs/
+analise-*/
+audit/
+run-state.json
+context_dump*.txt
+# Modelos e ambientes
+models/
+*.gguf
+*.safetensors
+*.onnx
+.audit-venv/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/

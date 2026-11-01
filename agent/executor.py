@@ -6,15 +6,16 @@ import tempfile
 import json
 from datetime import datetime
 
-def execute_script_logic(script_data: dict, args: dict = {}) -> dict:
+def execute_script_logic(script_data: dict, args: dict | None = None) -> dict:
     """
     Executa o script fornecido no dicionário script_data.
     script_data deve conter 'content' (o código do script).
     """
     
+    args = args or {}
     script_content = script_data.get('content', '')
     
-    with tempfile.NamedTemporaryFile(mode='w+', suffix='.py', delete=False) as temp_file:
+    with tempfile.NamedTemporaryFile(mode='w+', suffix='.py', delete=False, encoding='utf-8') as temp_file:
         temp_file.write(script_content)
         temp_file_path = temp_file.name
 
